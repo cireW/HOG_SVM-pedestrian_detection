@@ -1,6 +1,7 @@
 # HOG行人检测系统
 
-本项目实现了基于HOG（Histogram of Oriented Gradients）特征的行人检测系统，包含多种HOG变体实现，可用于行人检测任务。
+
+本项目实现了基于HOG（Histogram of Oriented Gradients）特征的行人检测系统，包含多种HOG变体实现，可用于行人检测任务。[原文](https://inria.hal.science/inria-00548512/document)
 
 ## 功能特点
 
