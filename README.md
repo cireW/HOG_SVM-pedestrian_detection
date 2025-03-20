@@ -31,16 +31,19 @@ datasets/INRIAPerson/
 ├── Train/
 │   ├── pos/  # 训练集正样本（包含行人的图像）
 │   │   └── *.png
-│   └── neg/  # 训练集负样本（不包含行人的图像）
-│       └── *.png
+│   ├── neg/  # 训练集负样本（不包含行人的图像）
+│   ├── └── *.png
+│   └── annotations/ #bounding box
 └── Test/
     ├── pos/  # 测试集正样本
     │   └── *.png
-    └── neg/  # 测试集负样本
-        └── *.png
+    ├── neg/  # 测试集负样本
+    │   └── *.png
+    └── annotations/ #bounding box
+
 ```
 
-### Caltech Pedestrian数据集
+### Caltech Pedestrian数据集 (not support yet)
 ```
 datasets/Caltech/
 ├── Train/
@@ -100,8 +103,8 @@ python main.py --method chog --sigma 1.0 --nbins 12 --norm-method L1-Sqrt --wind
 
 系统提供以下评估指标：
 
-- 分类报告：包含准确率、召回率、F1分数等指标
-- FPPW（每窗口误报率）：衡量检测器的误报情况
+- FPPW
+- Missing rate
 
 检测结果将以可视化方式展示，包括：
 - 在测试图像上标注检测到的行人位置
