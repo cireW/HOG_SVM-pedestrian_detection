@@ -35,6 +35,8 @@ def main():
     parser.add_argument('--dataset', type=str, default='inria',
                       choices=['inria', 'caltech'],
                       help='选择数据集: inria (INRIA Person), caltech (Caltech Pedestrian)')
+    parser.add_argument('--threshold', type=int, default='0.5',
+                      help='SVM分类器的置信阈值')
     args = parser.parse_args()
 
     # 根据选择初始化相应的HOG检测器
@@ -42,7 +44,8 @@ def main():
         'window_size': tuple(args.window_size),
         'nbins': args.nbins,
         'sigma': args.sigma,
-        'norm_method': args.norm_method
+        'norm_method': args.norm_method,
+        'threshold': args.threshold
     }
     
     if args.method == 'rhog':
@@ -122,17 +125,17 @@ def main():
     os.makedirs(result_dir, exist_ok=True)
     
     # 增加数据有效性检查
-    # if len(fppw_rates) > 0 and len(missing_rates) > 0:
-    #     plt.yscale('log')
-    # plt.xlabel('FPPW (log scale)')
-    # plt.ylabel('Missing Rate (log scale)')
-    # plt.title('ROC Curve')
-    # plt.legend()
-    # plt.grid(True)
+    if len(fppw_rates) > 0 and len(missing_rates) > 0:
+        plt.yscale('log')
+    plt.xlabel('FPPW (log scale)')
+    plt.ylabel('Missing Rate (log scale)')
+    plt.title('ROC Curve')
+    plt.legend()
+    plt.grid(True)
     
-    # # 保存ROC曲线
-    # plt.savefig(os.path.join(result_dir, f'{args.method}_roc.png'))
-    # plt.close()
+    # 保存ROC曲线
+    plt.savefig(os.path.join(result_dir, f'{args.method}_roc.png'))
+    plt.close()
     
     # 保存评估结果
     result_file = os.path.join(result_dir, f'{args.method}_evaluation.txt')

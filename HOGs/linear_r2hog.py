@@ -4,8 +4,8 @@ from sklearn.svm import LinearSVC
 from hog_detector import HOGDetector
 
 class LinearR2HOG(HOGDetector):
-    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys'):
-        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method)
+    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', confidence_threshold=0.5):
+        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, confidence_threshold=confidence_threshold)
         self.window_size = window_size
         self.cell_size = cell_size
         self.block_sizes = block_sizes
@@ -106,8 +106,8 @@ class LinearR2HOG(HOGDetector):
                         continue
                     self.total_windows += 1
                     features = self.compute_hog_features(window)
-                    pred = self.classifier.predict([features])[0]
-                    if pred == 1:
+                    decision_value = self.classifier.decision_function([features])[0]
+                    if decision_value > self.confidence_threshold:
                         detection = (int(x*scale), int(y*scale),
                                    int(min_size[0]*scale), int(min_size[1]*scale))
                         detections.append(detection)

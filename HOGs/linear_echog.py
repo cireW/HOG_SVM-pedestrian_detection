@@ -4,8 +4,8 @@ from sklearn.svm import LinearSVC
 from hog_detector import HOGDetector
 
 class LinearECHOG(HOGDetector):
-    def __init__(self, window_size=(64, 128), cell_radius=8, block_size=(2, 2), nbins=9, sigma=0, norm_method='L2-Hys'):
-        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method)
+    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', confidence_threshold=0.5):
+        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, confidence_threshold=confidence_threshold)
         self.cell_radius = cell_radius
         self.block_size = block_size
 

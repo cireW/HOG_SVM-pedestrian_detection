@@ -1,7 +1,6 @@
 # HOG行人检测系统
 
-
-本项目实现了基于HOG（Histogram of Oriented Gradients）特征的行人检测系统，包含多种HOG变体实现，可用于行人检测任务。[原文](https://inria.hal.science/inria-00548512/document)
+本项目实现了基于HOG（Histogram of Oriented Gradients）特征的行人检测系统，包含多种HOG变体实现，可用于行人检测任务。
 
 ## 功能特点
 
@@ -97,8 +96,12 @@ python main.py --method rhog
 
 2. 使用自定义参数运行Linear C-HOG：
 ```bash
-python main.py --method chog --sigma 1.0 --nbins 12 --norm-method L1-Sqrt --window-size 96 160
+python main.py --method chog --sigma 1.0 --nbins 12 --norm-method L1-Sqrt --window-size 96 160 --dataset inria --threshold 0.8
 ```
+
+### 实验
+
+修改SVM分类器置信值 threshold 即可得到
 
 ## 评估指标
 
