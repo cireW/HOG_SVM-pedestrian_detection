@@ -4,10 +4,10 @@ from sklearn.svm import SVC
 from hog_detector import HOGDetector
 
 class KernelRHOG(HOGDetector):
-    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', confidence_threshold=0.5):
-        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, confidence_threshold=confidence_threshold)
+    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', threshold=0.5):
+        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, threshold=threshold)
         self.cell_size = cell_size
-        self.block_size = block_size
+        self.block_size = block_sizes
         # 使用RBF核函数的SVM分类器
         self.classifier = SVC(kernel='rbf', probability=True)
 
@@ -96,8 +96,8 @@ class KernelRHOG(HOGDetector):
                         continue
                     self.total_windows += 1
                     features = self.compute_hog_features(window)
-                    pred = self.classifier.predict([features])[0]
-                    if pred == 1:
+                    decision_value = self.classifier.decision_function([features])[0]
+                    if decision_value > self.threshold:
                         detection = (int(x*scale), int(y*scale),
                                    int(min_size[0]*scale), int(min_size[1]*scale))
                         detections.append(detection)

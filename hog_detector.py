@@ -6,12 +6,12 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 class HOGDetector:
-    def __init__(self, window_size=(64, 128), nbins=9, sigma=0.5, norm_method='L2-Hys', confidence_threshold=0.5):
+    def __init__(self, window_size=(64, 128), nbins=9, sigma=0.5, norm_method='L2-Hys', threshold=0.5):
         self.window_size = window_size
         self.nbins = nbins
         self.sigma = sigma
         self.norm_method = norm_method
-        self.confidence_threshold = confidence_threshold
+        self.threshold = threshold
         self.classifier = LinearSVC(random_state=42)
         self.total_windows = 0
         self.false_positives = 0
@@ -97,7 +97,7 @@ class HOGDetector:
                     self.total_windows += 1
                     features = self.compute_hog_features(window)
                     decision_value = self.classifier.decision_function([features])[0]
-                    if decision_value > self.confidence_threshold:
+                    if decision_value > self.threshold:
                         detection_box = (int(x*scale), int(y*scale),
                                        int(min_size[0]*scale), int(min_size[1]*scale))
                         detections.append(detection_box)

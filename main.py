@@ -22,7 +22,7 @@ def main():
                       help='选择HOG方法: rhog (Linear R-HOG), chog (Linear C-HOG), '
                            'echog (Linear EC-HOG), krhog (Kernel R-HOG), '
                            'r2hog (Linear R2-HOG)')
-    parser.add_argument('--sigma', type=float, default=0.5,
+    parser.add_argument('--sigma', type=float, default=0,
                       help='梯度尺度sigma，默认为0')
     parser.add_argument('--nbins', type=int, default=9,
                       help='方向直方图bins数量，默认为9')
@@ -32,16 +32,24 @@ def main():
     parser.add_argument('--window-size', type=int, nargs=2, default=[64, 128],
                       metavar=('width', 'height'),
                       help='检测窗口大小，默认为64 128')
+    parser.add_argument('--cell-size', type=int, nargs=2, default=[8, 8],
+                      metavar=('width', 'height'),
+                      help='Cell大小，默认为8 8')
+    parser.add_argument('--block-size', type=int, nargs=2, default=[2, 2],
+                      metavar=('width', 'height'),
+                      help='Block大小（以cell为单位），默认为2 2')
     parser.add_argument('--dataset', type=str, default='inria',
                       choices=['inria', 'caltech'],
                       help='选择数据集: inria (INRIA Person), caltech (Caltech Pedestrian)')
-    parser.add_argument('--threshold', type=int, default='0.5',
+    parser.add_argument('--threshold', type=float, default='0.5',
                       help='SVM分类器的置信阈值')
     args = parser.parse_args()
 
     # 根据选择初始化相应的HOG检测器
     detector_params = {
         'window_size': tuple(args.window_size),
+        'cell_size': tuple(args.cell_size),
+        'block_size': tuple(args.block_size),
         'nbins': args.nbins,
         'sigma': args.sigma,
         'norm_method': args.norm_method,
@@ -114,35 +122,36 @@ def main():
         missing_rates.append(missing_rate)
         fppw_rates.append(fppw)
     
-    # 绘制ROC曲线
-    plt.figure(figsize=(10, 6))
-    plt.plot(fppw_rates, missing_rates, label=args.method)
-    plt.xscale('log')
-    # 定义结果目录路径
+    # # 绘制ROC曲线
+    # plt.figure(figsize=(10, 6))
+    # plt.plot(fppw_rates, missing_rates, label=args.method)
+    # plt.xscale('log')
+    # # 定义结果目录路径
     result_dir = './results'
     
     # 创建结果目录
     os.makedirs(result_dir, exist_ok=True)
     
-    # 增加数据有效性检查
-    if len(fppw_rates) > 0 and len(missing_rates) > 0:
-        plt.yscale('log')
-    plt.xlabel('FPPW (log scale)')
-    plt.ylabel('Missing Rate (log scale)')
-    plt.title('ROC Curve')
-    plt.legend()
-    plt.grid(True)
+    # # 增加数据有效性检查
+    # if len(fppw_rates) > 0 and len(missing_rates) > 0:
+    #     plt.yscale('log')
+    # plt.xlabel('FPPW (log scale)')
+    # plt.ylabel('Missing Rate (log scale)')
+    # plt.title('ROC Curve')
+    # plt.legend()
+    # plt.grid(True)
     
-    # 保存ROC曲线
-    plt.savefig(os.path.join(result_dir, f'{args.method}_roc.png'))
-    plt.close()
+    # # 保存ROC曲线
+    # plt.savefig(os.path.join(result_dir, f'{args.method}_roc.png'))
+    # plt.close()
     
     # 保存评估结果
     result_file = os.path.join(result_dir, f'{args.method}_evaluation.txt')
-    with open(result_file, 'w') as f:
+    with open(result_file, 'a') as f:
         f.write(f'Method: {args.method}\n')
         f.write(f'Best Missing Rate: {min(missing_rates):.6f}\n')
         f.write(f'Best FPPW: {min(fppw_rates):.6f}\n')
+        f.write('\n')  
     print(f'\n评估结果已保存到: {result_file}')
     
     # 测试检测效果

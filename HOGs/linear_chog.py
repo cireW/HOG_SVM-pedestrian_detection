@@ -4,9 +4,9 @@ from sklearn.svm import LinearSVC
 from hog_detector import HOGDetector
 
 class LinearCHOG(HOGDetector):
-    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', confidence_threshold=0.5):
-        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, confidence_threshold=confidence_threshold)
-        self.cell_radius = cell_radius
+    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_size=(2, 2), nbins=9, sigma=0, norm_method='L2-Hys', threshold=0.5):
+        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, threshold=threshold)
+        self.cell_size = cell_size
         self.block_size = block_size
 
     def compute_gradient(self, img):
@@ -30,9 +30,8 @@ class LinearCHOG(HOGDetector):
         magnitude, orientation = self.compute_gradient(img)
         
         # 计算圆形cell的中心点
-        cell_spacing = self.cell_radius * 2
-        cell_centers_x = np.arange(self.cell_radius, self.window_size[0], cell_spacing)
-        cell_centers_y = np.arange(self.cell_radius, self.window_size[1], cell_spacing)
+        cell_centers_x = np.arange(self.cell_size[0]//2, self.window_size[0], self.cell_size[0])
+        cell_centers_y = np.arange(self.cell_size[1]//2, self.window_size[1], self.cell_size[1])
         cell_rows = len(cell_centers_y)
         cell_cols = len(cell_centers_x)
         
@@ -41,7 +40,7 @@ class LinearCHOG(HOGDetector):
         for i, y in enumerate(cell_centers_y):
             for j, x in enumerate(cell_centers_x):
                 mask = self.create_circular_mask(self.window_size[1], self.window_size[0],
-                                               (x, y), self.cell_radius)
+                                               (x, y), min(self.cell_size)//2)
                 cell_mag = magnitude[mask]
                 cell_ori = orientation[mask]
                 
@@ -98,7 +97,7 @@ class LinearCHOG(HOGDetector):
                     self.total_windows += 1
                     features = self.compute_hog_features(window)
                     decision_value = self.classifier.decision_function([features])[0]
-                    if decision_value > self.confidence_threshold:
+                    if decision_value > self.threshold:
                         detection = (int(x*scale), int(y*scale),
                                    int(min_size[0]*scale), int(min_size[1]*scale))
                         detections.append(detection)
