@@ -96,12 +96,8 @@ python main.py --method rhog
 
 2. 使用自定义参数运行Linear C-HOG：
 ```bash
-python main.py --method chog --sigma 1.0 --nbins 12 --norm-method L1-Sqrt --window-size 96 160 --dataset inria --threshold 0.8
+python main.py --method chog --sigma 1.0 --nbins 12 --norm-method L1-Sqrt --window-size 96 160 --dataset inria 
 ```
-
-### 实验
-
-修改SVM分类器置信值 threshold 即可得到
 
 ## 评估指标
 

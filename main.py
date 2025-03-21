@@ -32,16 +32,16 @@ def main():
     parser.add_argument('--window-size', type=int, nargs=2, default=[64, 128],
                       metavar=('width', 'height'),
                       help='检测窗口大小，默认为64 128')
-    parser.add_argument('--cell-size', type=int, nargs=2, default=[8, 8],
+    parser.add_argument('--cell-size', type=int, nargs=2, default=[6, 6],
                       metavar=('width', 'height'),
                       help='Cell大小，默认为8 8')
-    parser.add_argument('--block-size', type=int, nargs=2, default=[2, 2],
+    parser.add_argument('--block-size', type=int, nargs=2, default=[3, 3],
                       metavar=('width', 'height'),
                       help='Block大小（以cell为单位），默认为2 2')
     parser.add_argument('--dataset', type=str, default='inria',
                       choices=['inria', 'caltech'],
                       help='选择数据集: inria (INRIA Person), caltech (Caltech Pedestrian)')
-    parser.add_argument('--threshold', type=float, default='0.5',
+    parser.add_argument('--threshold', type=float, default='1',
                       help='SVM分类器的置信阈值')
     args = parser.parse_args()
 
@@ -95,8 +95,8 @@ def main():
     missing_rates = []
     fppw_rates = []
     
-    # 计算测试集中的总行人数量和总窗口数量
-    total_positives = sum(len(boxes) for boxes in test_annotations)
+    # 计算测试集中的总正样本数量和总窗口数量
+    total_positives = np.sum(y_test == 1)  # 使用y_test计算正样本数量
     total_windows = len(X_test)  # 每个图像视为一个检测窗口
     
     for threshold in thresholds:
@@ -106,11 +106,11 @@ def main():
         missed_detections = 0
         false_positives = 0
         
-        # 根据标注信息计算漏检和误报
-        for i, (pred, boxes) in enumerate(zip(y_pred, test_annotations)):
-            if len(boxes) > 0:  # 正样本图像
+        # 根据y_test计算漏检和误报
+        for i, (pred, true_label) in enumerate(zip(y_pred, y_test)):
+            if true_label == 1:  # 正样本图像
                 if pred == 0:  # 预测为负样本
-                    missed_detections += len(boxes)  # 所有行人都被漏检
+                    missed_detections += 1  # 漏检一个正样本
             else:  # 负样本图像
                 if pred == 1:  # 预测为正样本
                     false_positives += 1
@@ -122,36 +122,41 @@ def main():
         missing_rates.append(missing_rate)
         fppw_rates.append(fppw)
     
-    # # 绘制ROC曲线
-    # plt.figure(figsize=(10, 6))
-    # plt.plot(fppw_rates, missing_rates, label=args.method)
-    # plt.xscale('log')
-    # # 定义结果目录路径
+    # 定义结果目录路径
     result_dir = './results'
     
     # 创建结果目录
     os.makedirs(result_dir, exist_ok=True)
+    plt.figure(figsize=(10, 6))
+    plt.plot(fppw_rates, missing_rates, label=args.method)
+    plt.xscale('log')
+    if len(fppw_rates) > 0 and len(missing_rates) > 0:
+        plt.yscale('log')
+    plt.xlabel('FPPW (log scale)')
+    plt.ylabel('Missing Rate (log scale)')
+    plt.title('ROC Curve')
+    plt.legend()
+    plt.grid(True)
     
-    # # 增加数据有效性检查
-    # if len(fppw_rates) > 0 and len(missing_rates) > 0:
-    #     plt.yscale('log')
-    # plt.xlabel('FPPW (log scale)')
-    # plt.ylabel('Missing Rate (log scale)')
-    # plt.title('ROC Curve')
-    # plt.legend()
-    # plt.grid(True)
-    
-    # # 保存ROC曲线
-    # plt.savefig(os.path.join(result_dir, f'{args.method}_roc.png'))
-    # plt.close()
+    # 保存ROC曲线
+    plt.savefig(os.path.join(result_dir, f'{args.method}_roc.png'))
+    plt.close()
+    # 保存ROC曲线数据到CSV文件
+    import csv
+    roc_data_file = os.path.join(result_dir, f'{args.method}_roc_data.csv')
+    with open(roc_data_file, 'w', newline='') as csvfile:
+        csv_writer = csv.writer(csvfile)
+        csv_writer.writerow(['FPPW', 'Missing_Rate'])
+        for fppw, mr in zip(fppw_rates, missing_rates):
+            csv_writer.writerow([fppw, mr])
+    print(f'\nROC曲线数据已保存到: {roc_data_file}')
     
     # 保存评估结果
     result_file = os.path.join(result_dir, f'{args.method}_evaluation.txt')
-    with open(result_file, 'a') as f:
+    with open(result_file, 'w') as f:
         f.write(f'Method: {args.method}\n')
         f.write(f'Best Missing Rate: {min(missing_rates):.6f}\n')
         f.write(f'Best FPPW: {min(fppw_rates):.6f}\n')
-        f.write('\n')  
     print(f'\n评估结果已保存到: {result_file}')
     
     # 测试检测效果
