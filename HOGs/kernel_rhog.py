@@ -4,10 +4,11 @@ from sklearn.svm import SVC
 from hog_detector import HOGDetector
 
 class KernelRHOG(HOGDetector):
-    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', threshold=0.5):
+    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_size=(2, 2), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', threshold=0.5):
         super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, threshold=threshold)
         self.cell_size = cell_size
-        self.block_size = block_sizes
+        self.block_size = block_size
+        self.block_sizes = block_sizes
         # 使用RBF核函数的SVM分类器
         self.classifier = SVC(kernel='rbf', probability=True)
 

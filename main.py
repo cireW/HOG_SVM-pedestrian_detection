@@ -6,7 +6,7 @@ from hog_detector import HOGDetector
 import matplotlib.pyplot as plt
 from dataset_loaders import load_dataset
 from sklearn.metrics import confusion_matrix
-
+import pandas as pd
 def main():
     import argparse
     from HOGs.linear_rhog import LinearRHOG
@@ -127,37 +127,16 @@ def main():
     
     # 创建结果目录
     os.makedirs(result_dir, exist_ok=True)
-    plt.figure(figsize=(10, 6))
-    plt.plot(fppw_rates, missing_rates, label=args.method)
-    plt.xscale('log')
-    if len(fppw_rates) > 0 and len(missing_rates) > 0:
-        plt.yscale('log')
-    plt.xlabel('FPPW (log scale)')
-    plt.ylabel('Missing Rate (log scale)')
-    plt.title('ROC Curve')
-    plt.legend()
-    plt.grid(True)
     
-    # 保存ROC曲线
-    plt.savefig(os.path.join(result_dir, f'{args.method}_roc.png'))
-    plt.close()
     # 保存ROC曲线数据到CSV文件
-    import csv
-    roc_data_file = os.path.join(result_dir, f'{args.method}_roc_data.csv')
-    with open(roc_data_file, 'w', newline='') as csvfile:
-        csv_writer = csv.writer(csvfile)
-        csv_writer.writerow(['FPPW', 'Missing_Rate'])
-        for fppw, mr in zip(fppw_rates, missing_rates):
-            csv_writer.writerow([fppw, mr])
-    print(f'\nROC曲线数据已保存到: {roc_data_file}')
+    csv_file = os.path.join(result_dir, f'{args.method}_roc_data.csv')
     
-    # 保存评估结果
-    result_file = os.path.join(result_dir, f'{args.method}_evaluation.txt')
-    with open(result_file, 'w') as f:
-        f.write(f'Method: {args.method}\n')
-        f.write(f'Best Missing Rate: {min(missing_rates):.6f}\n')
-        f.write(f'Best FPPW: {min(fppw_rates):.6f}\n')
-    print(f'\n评估结果已保存到: {result_file}')
+    df = pd.DataFrame({
+        'fppw': fppw_rates,
+        'mr': missing_rates
+    })
+    df.to_csv(csv_file, index=False)
+    
     
     # 测试检测效果
     # parser.add_argument('--test-image', type=str,

@@ -1,15 +1,17 @@
 import cv2
 import numpy as np
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from hog_detector import HOGDetector
 
 class LinearR2HOG(HOGDetector):
-    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', threshold=0.5):
+    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_size=(2, 2), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', threshold=0.5):
         super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, threshold=threshold)
         self.window_size = window_size
         self.cell_size = cell_size
+        self.block_size = block_size
         self.block_sizes = block_sizes
         self.nbins = nbins
+        self.classifier = LinearSVC(random_state=42)
 
     def compute_gradient(self, img):
         # 计算x和y方向的梯度
@@ -72,7 +74,6 @@ class LinearR2HOG(HOGDetector):
         return np.array(features)
 
     def train(self, X, y):
-        self.classifier = SVC(kernel='linear', probability=True)
         self.classifier.fit(X, y)
 
     def decision_function(self, X):
