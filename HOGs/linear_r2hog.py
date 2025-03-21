@@ -1,16 +1,15 @@
 import cv2
 import numpy as np
-from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
 from hog_detector import HOGDetector
 
 class LinearR2HOG(HOGDetector):
     def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', threshold=0.5):
-        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, threshold=confidence_threshold)
+        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, threshold=threshold)
         self.window_size = window_size
         self.cell_size = cell_size
         self.block_sizes = block_sizes
         self.nbins = nbins
-        self.classifier = LinearSVC(random_state=42)
 
     def compute_gradient(self, img):
         # 计算x和y方向的梯度
@@ -73,6 +72,7 @@ class LinearR2HOG(HOGDetector):
         return np.array(features)
 
     def train(self, X, y):
+        self.classifier = SVC(kernel='linear', probability=True)
         self.classifier.fit(X, y)
 
     def decision_function(self, X):
@@ -107,7 +107,7 @@ class LinearR2HOG(HOGDetector):
                     self.total_windows += 1
                     features = self.compute_hog_features(window)
                     decision_value = self.classifier.decision_function([features])[0]
-                    if decision_value > self.confidence_threshold:
+                    if decision_value > self.threshold:
                         detection = (int(x*scale), int(y*scale),
                                    int(min_size[0]*scale), int(min_size[1]*scale))
                         detections.append(detection)

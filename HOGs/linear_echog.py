@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
 from hog_detector import HOGDetector
 
 class LinearECHOG(HOGDetector):
@@ -87,11 +87,11 @@ class LinearECHOG(HOGDetector):
         return np.array(features)
 
     def train(self, X, y):
-        self.svm = svm.SVC(kernel='linear', probability=True)
-        self.svm.fit(X, y)
+        self.classifier = SVC(kernel='linear', probability=True)
+        self.classifier.fit(X, y)
 
     def decision_function(self, X):
-        return self.svm.decision_function(X)
+        return self.classifier.decision_function(X)
 
     def predict(self, X):
         return self.classifier.predict(X)

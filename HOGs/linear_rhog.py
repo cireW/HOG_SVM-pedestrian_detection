@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
-from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
 from hog_detector import HOGDetector
 
 class LinearRHOG(HOGDetector):
-    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_size=(2, 2), nbins=9, sigma=0, norm_method='L2-Hys', threshold=0.5):
-        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, threshold=threshold)
+    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_size=(2, 2), nbins=9, sigma=0, norm_method='L2-Hys', confidence_threshold=0.5):
+        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, confidence_threshold=confidence_threshold)
         self.cell_size = cell_size
         self.block_size = block_size
 
@@ -60,11 +60,11 @@ class LinearRHOG(HOGDetector):
         return np.array(features)
 
     def train(self, X, y):
-        self.svm = svm.SVC(kernel='linear', probability=True)
-        self.svm.fit(X, y)
+        self.classifier = SVC(kernel='linear', probability=True)
+        self.classifier.fit(X, y)
 
     def decision_function(self, X):
-        return self.svm.decision_function(X)
+        return self.classifier.decision_function(X)
 
     def predict(self, X):
         return self.classifier.predict(X)
@@ -95,7 +95,7 @@ class LinearRHOG(HOGDetector):
                     self.total_windows += 1
                     features = self.compute_hog_features(window)
                     decision_value = self.classifier.decision_function([features])[0]
-                    if decision_value > self.threshold:
+                    if decision_value > self.confidence_threshold:
                         detection = (int(x*scale), int(y*scale),
                                    int(min_size[0]*scale), int(min_size[1]*scale))
                         detections.append(detection)
