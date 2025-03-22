@@ -1,19 +1,22 @@
 import cv2
 import numpy as np
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from hog_detector import HOGDetector
 
 class LinearR2HOG(HOGDetector):
-    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_size=(2, 2), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', threshold=0.5):
-        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, threshold=threshold)
+    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_size=(2, 2), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', confidence_threshold=0.5):
+        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, confidence_threshold=confidence_threshold)
         self.window_size = window_size
         self.cell_size = cell_size
         self.block_size = block_size
         self.block_sizes = block_sizes
         self.nbins = nbins
-        self.classifier = SVC(kernel='linear', C=0.01, probability=True)
+        
 
     def compute_gradient(self, img):
+        # 如果需要，先进行高斯平滑
+        if self.sigma > 0:
+            img = cv2.GaussianBlur(img, (0, 0), self.sigma)
         # 计算x和y方向的梯度
         gx = cv2.Sobel(img, cv2.CV_32F, 1, 0)
         gy = cv2.Sobel(img, cv2.CV_32F, 0, 1)
@@ -108,7 +111,7 @@ class LinearR2HOG(HOGDetector):
                     self.total_windows += 1
                     features = self.compute_hog_features(window)
                     decision_value = self.classifier.decision_function([features])[0]
-                    if decision_value > self.threshold:
+                    if decision_value > self.confidence_threshold:
                         detection = (int(x*scale), int(y*scale),
                                    int(min_size[0]*scale), int(min_size[1]*scale))
                         detections.append(detection)

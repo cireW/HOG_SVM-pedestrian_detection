@@ -4,15 +4,18 @@ from sklearn.svm import SVC
 from hog_detector import HOGDetector
 
 class KernelRHOG(HOGDetector):
-    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_size=(2, 2), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', threshold=0.5):
-        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, threshold=threshold)
+    def __init__(self, window_size=(64, 128), cell_size=(8, 8), block_size=(2, 2), block_sizes=[(2, 2), (3, 3)], nbins=9, sigma=0, norm_method='L2-Hys', confidence_threshold=0.5):
+        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, confidence_threshold=confidence_threshold)
         self.cell_size = cell_size
         self.block_size = block_size
         self.block_sizes = block_sizes
         # 使用RBF核函数的SVM分类器
-        self.classifier = SVC(kernel='rbf', C=0.01, probability=True)
+        self.classifier = SVC(kernel='rbf', C=0.01,probability=True)
 
     def compute_gradient(self, img):
+        # 如果需要，先进行高斯平滑
+        if self.sigma > 0:
+            img = cv2.GaussianBlur(img, (0, 0), self.sigma)
         # 计算x和y方向的梯度
         gx = cv2.Sobel(img, cv2.CV_32F, 1, 0)
         gy = cv2.Sobel(img, cv2.CV_32F, 0, 1)
@@ -56,9 +59,8 @@ class KernelRHOG(HOGDetector):
                 block = histograms[row:row+self.block_size[1],
                                  col:col+self.block_size[0], :]
                 block_features = block.ravel()
-                # L2归一化
-                norm = np.sqrt(np.sum(block_features**2) + 1e-6)
-                block_features = block_features / norm
+                # 使用基类的归一化方法
+                block_features = self.normalize_block(block_features)
                 features.extend(block_features)
         
         return np.array(features)
@@ -98,7 +100,7 @@ class KernelRHOG(HOGDetector):
                     self.total_windows += 1
                     features = self.compute_hog_features(window)
                     decision_value = self.classifier.decision_function([features])[0]
-                    if decision_value > self.threshold:
+                    if decision_value > self.confidence_threshold:
                         detection = (int(x*scale), int(y*scale),
                                    int(min_size[0]*scale), int(min_size[1]*scale))
                         detections.append(detection)

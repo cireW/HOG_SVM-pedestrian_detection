@@ -12,7 +12,7 @@ class HOGDetector:
         self.sigma = sigma
         self.norm_method = norm_method
         self.threshold = threshold
-        self.classifier = LinearSVC(random_state=42)
+        self.classifier = LinearSVC(kernel='linear', C=0.01, probability=True)
         self.total_windows = 0
         self.false_positives = 0
         self.total_positives = 0

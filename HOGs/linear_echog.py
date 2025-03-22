@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from hog_detector import HOGDetector
 
 class LinearECHOG(HOGDetector):
-    def __init__(self, window_size=(64, 128), cell_size=(8, 8), cell_radius=4, block_size=(2, 2), nbins=9, sigma=0, norm_method='L2-Hys', threshold=0.5):
-        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, threshold=threshold)
+    def __init__(self, window_size=(64, 128), cell_size=(8, 8), cell_radius=4, block_size=(2, 2), nbins=9, sigma=0, norm_method='L2-Hys', confidence_threshold=0.5):
+        super().__init__(window_size=window_size, nbins=nbins, sigma=sigma, norm_method=norm_method, confidence_threshold=confidence_threshold)
         # 如果提供了cell_size，则使用cell_size的一半作为cell_radius
         if cell_size:
             self.cell_radius = min(cell_size) // 2
@@ -15,8 +15,13 @@ class LinearECHOG(HOGDetector):
         self.block_size = block_size
 
     def compute_gradient(self, img):
+        # 如果需要，先进行高斯平滑
+        if self.sigma > 0:
+            img = cv2.GaussianBlur(img, (0, 0), self.sigma)
+        # 计算x和y方向的梯度
         gx = cv2.Sobel(img, cv2.CV_32F, 1, 0)
         gy = cv2.Sobel(img, cv2.CV_32F, 0, 1)
+        # 计算梯度幅值和方向
         magnitude = np.sqrt(gx**2 + gy**2)
         orientation = np.arctan2(gy, gx) * 180 / np.pi % 180
         return magnitude, orientation
@@ -75,15 +80,15 @@ class LinearECHOG(HOGDetector):
                 block = histograms[row:row+self.block_size[1],
                                  col:col+self.block_size[0], :]
                 block_features = block.ravel()
-                norm = np.sqrt(np.sum(block_features**2) + 1e-6)
-                block_features = block_features / norm
+                # 使用基类的归一化方法
+                block_features = self.normalize_block(block_features)
                 
                 # 边缘特征
                 edge_block = edge_features[row:row+self.block_size[1],
                                          col:col+self.block_size[0]]
                 edge_block_features = edge_block.ravel()
-                edge_norm = np.sqrt(np.sum(edge_block_features**2) + 1e-6)
-                edge_block_features = edge_block_features / edge_norm
+                # 使用基类的归一化方法
+                edge_block_features = self.normalize_block(edge_block_features)
                 
                 # 组合特征
                 features.extend(block_features)
@@ -92,11 +97,10 @@ class LinearECHOG(HOGDetector):
         return np.array(features)
 
     def train(self, X, y):
-        self.svm = SVC(kernel='linear', C=0.01, probability=True)
-        self.svm.fit(X, y)
+        self.classifier.fit(X, y)
 
     def decision_function(self, X):
-        return self.svm.decision_function(X)
+        return self.classifier.decision_function(X)
 
     def predict(self, X):
         return self.classifier.predict(X)
@@ -127,7 +131,7 @@ class LinearECHOG(HOGDetector):
                     self.total_windows += 1
                     features = self.compute_hog_features(window)
                     decision_value = self.classifier.decision_function([features])[0]
-                    if decision_value > self.threshold:
+                    if decision_value > self.confidence_threshold:
                         detection = (int(x*scale), int(y*scale),
                                    int(min_size[0]*scale), int(min_size[1]*scale))
                         detections.append(detection)
