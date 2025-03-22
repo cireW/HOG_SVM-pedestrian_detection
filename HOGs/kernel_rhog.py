@@ -10,7 +10,7 @@ class KernelRHOG(HOGDetector):
         self.block_size = block_size
         self.block_sizes = block_sizes
         # 使用RBF核函数的SVM分类器
-        self.classifier = SVC(kernel='rbf', probability=True)
+        self.classifier = SVC(kernel='rbf', C=0.01, probability=True)
 
     def compute_gradient(self, img):
         # 计算x和y方向的梯度

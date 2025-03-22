@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
 from hog_detector import HOGDetector
 
 class LinearR2HOG(HOGDetector):
@@ -11,7 +11,7 @@ class LinearR2HOG(HOGDetector):
         self.block_size = block_size
         self.block_sizes = block_sizes
         self.nbins = nbins
-        self.classifier = LinearSVC(random_state=42)
+        self.classifier = SVC(kernel='linear', C=0.01, probability=True)
 
     def compute_gradient(self, img):
         # 计算x和y方向的梯度

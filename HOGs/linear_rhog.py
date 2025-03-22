@@ -60,7 +60,7 @@ class LinearRHOG(HOGDetector):
         return np.array(features)
 
     def train(self, X, y):
-        self.classifier = SVC(kernel='linear', probability=True)
+        self.classifier = SVC(kernel='linear', C=0.01, probability=True)
         self.classifier.fit(X, y)
 
     def decision_function(self, X):

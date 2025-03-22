@@ -92,7 +92,7 @@ class LinearECHOG(HOGDetector):
         return np.array(features)
 
     def train(self, X, y):
-        self.svm = SVC(kernel='linear', probability=True)
+        self.svm = SVC(kernel='linear', C=0.01, probability=True)
         self.svm.fit(X, y)
 
     def decision_function(self, X):
